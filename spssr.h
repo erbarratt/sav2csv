@@ -85,9 +85,6 @@
 	*/
 		struct Variable{
 			
-			//Record type code. Always set to 2.
-				int32_t rec_type;
-			
 			//Variable type code. Set to 0 for a numeric variable. For a short string variable or the first part of a
 			// long string variable, this is set to the width of the string. For the second and subsequent parts of a
 			// long string variable, set to -1, and the remaining fields in the structure are ignored.
@@ -165,7 +162,7 @@
 			//The ‘name’ fields should be unique within a system file. System files written by SPSS that contain very
 			// long string variables with similar names sometimes contain duplicate names that are later eliminated by
 			// resolving the very long string names
-				char name[8];
+				char name[9];
 			
 			//This field is present only if has_var_label is set to 1. It is set to the length, in characters, of the
 			// variable label. The documented maximum length varies from 120 to 255 based on SPSS version, but some
@@ -229,15 +226,21 @@
 			
 			//head element of Variables linked list
 				struct Variable* variables_list_head;
+				int variable_count;
 				
 			//methods
 				int (*openFile)(void* eOBJ);
-				int (*readHeader)(void* eOBJ);
+				void (*readHeader)(void* eOBJ);
+				void (*readMeta)(void* eOBJ);
+				void (*readVariable)(void* eOBJ);
+				void (*readValueLabels)(void* eOBJ);
 				
+				void (*readInt8)(void* eOBJ, int8_t * buffer);
 				void (*readInt32)(void* eOBJ, int32_t * buffer);
 				void (*readFlt64)(void* eOBJ, flt64_t * buffer);
 				void (*readText)(void* eOBJ, char* buffer, size_t amt);
-				
+			
+			
 		};
 		
 		typedef struct spssr_t spssr_t;
@@ -253,8 +256,12 @@
 			int lineLimit
 		);
 		int spssr_t_openFile(void* eOBJ);
-		int spssr_t_readHeader(void* eOBJ);
+		void spssr_t_readHeader(void* eOBJ);
+		void spssr_t_readMeta(void* eOBJ);
+		void spssr_t_readVariable(void* eOBJ);
+		void spssr_t_readValueLabels(void* eOBJ);
 		
+		void spssr_t_readInt8(void* eOBJ, int8_t* buffer);
 		void spssr_t_readInt32(void* eOBJ, int32_t* buffer);
 		void spssr_t_readFlt64(void* eOBJ, flt64_t* buffer);
 		void spssr_t_readText(void* eOBJ, char* buffer, size_t amt);

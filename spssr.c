@@ -66,7 +66,8 @@
 				self->variables_list_head = (struct Variable*)malloc(sizeof(struct Variable));
 				
 				if (self->variables_list_head == NULL) {
-				    //exitAndCloseFile("Failed to allocate memory for variables.", "");
+				    fprintf(stderr, cRED "Failed to allocate memory for variables.\n\n" cRESET);
+					exit(EXIT_FAILURE);
 				}
 				
 				self->variables_list_head->alignment = 0;
@@ -83,7 +84,8 @@
 				self->variables_list_head->write = 0;
 				self->variables_list_head->next = NULL;
 				
-			eCALLna(self, readHeader);
+			//read header
+				eCALLna(self, readHeader);
 			
 		}
 	
@@ -101,9 +103,8 @@
 				self->savptr = fopen(self->filename, "rb");
 				
 			//file open?
-				if (self->savptr == NULL) {
+				if (self->savptr == NULL)
 					return 1;
-				}
 				
 			return 0;
 			
@@ -165,29 +166,31 @@
 				self->readFlt64(self, &self->header.compression_bias);
 				(!self->silent && self->debug) ? printf(cYELLOW "Compression Bias: " cMAGENTA "%f\n" cRESET, self->header.compression_bias) : 0 ;
 
-			// creation date
-				//readOver((size_t)9, "Creation Date:");
-				//readOver((size_t)8, "Creation Time:");
+			//creation date @109
+				self->readText(self, self->header.creation_date, 9);
+				(!self->silent && self->debug) ? printf(cYELLOW "Creation Date: " cMAGENTA "%s\n" cRESET, self->header.creation_date) : 0 ;
+				self->readText(self, self->header.creation_time, 8);
+				(!self->silent && self->debug) ? printf(cYELLOW "Creation Time: " cMAGENTA "%s\n" cRESET, self->header.creation_time) : 0 ;
 				
-				//@109
+			//file label @173
+				self->readText(self, self->header.file_label, 64);
+				(!self->silent && self->debug) ? printf(cYELLOW "File Label: " cMAGENTA "%s\n" cRESET, self->header.file_label) : 0 ;
 				
-			// file label
-				//readOver((size_t)64, "File Label:");
+			//padding @176
+				self->readText(self, self->header.padding, 3);
+				(!self->silent && self->debug) ? printf(cYELLOW "Padding: " cMAGENTA "%s\n" cRESET, self->header.padding) : 0 ;
 				
-				//@173
-				
-			// padding
-				//readOver((size_t)3, "Padding:");
-				
-				//@176
-				
-			//if(!silent){
-			//	printOut("\t%s Cases found", intToStr32(numberOfCases), "cyan");
-			//}
+			(!self->silent) ? printf(cCYAN "Cases found: " cMAGENTA "%d\n" cRESET, self->header.ncases) : 0 ;
 			
 			return 0;
 		}
 		
+	/**
+	* Read a signed 32 bit integer from file
+	* @param eOBJ
+	* @param int32_t* buffer
+	* @return void
+	*/
 		void spssr_t_readInt32(void* eOBJ, int32_t* buffer)
 		{
 			eSELF(spssr_t);
@@ -204,6 +207,12 @@
 		
 		}
 		
+	/**
+	* Read a signed 64 bit float from file
+	* @param eOBJ
+	* @param flt64_t* buffer
+	* @return void
+	*/
 		void spssr_t_readFlt64(void* eOBJ, flt64_t* buffer)
 		{
 			eSELF(spssr_t);

@@ -64,19 +64,19 @@
 			//Date of creation of the system file, in ‘dd mmm yy’ format, with the month as standard English abbreviations,
 			// using an initial capital letter and following with lowercase. If the date is not available then this field
 			// is arbitrarily set to ‘01 Jan 70’.
-				char creation_date[9];
+				char creation_date[10];
 			
 			//Time of creation of the system file, in ‘hh:mm:ss’ format and using 24-hour time. If the time is not
 			// available then this field is arbitrarily set to ‘00:00:00’.
-				char creation_time[8];
+				char creation_time[9];
 			
 			//File label declared by the user, if any (see FILE LABEL in PSPP Users Guide). Padded on the right with spaces.
 			//A product that identifies itself as VOXCO INTERVIEWER 4.3 uses CR-only line ends in this field, rather
 			// than the more usual LF-only or CR LF line ends.
-				char file_label[64];
+				char file_label[65];
 			
 			//Ignored padding bytes to make the structure a multiple of 32 bits in length. Set to zeros.
-				char padding[3];
+				char padding[4];
 			
 		};
 	

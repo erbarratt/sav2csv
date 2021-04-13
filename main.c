@@ -17,20 +17,21 @@ int main(int argc, char *argv[])
 	int opt;
 	
 	// If the first character of optstring is '-', then each nonoption argv-element is handled as if
-	// it were the argument of an option with character code 1. (This is used by programs that were written to expect options and other argv-elements in any order and that care about the ordering of the two.)
+	// it were the argument of an option with character code 1. (This is used by programs that were written to expect
+	// options and other argv-elements in any order and that care about the ordering of the two.)
 		if(argc == 2){
 			
 			//check for version output or help
 				while ((opt = getopt(argc, argv, "-vh")) != -1) {
 					
 					if(opt == 'v'){
-						printf( cGREEN "savtocsv " cRESET "version " cYELLOW "1.0 " cRESET "2021-04-02\n");
+						printf( cGREEN "sav2csv " cRESET "version " cYELLOW "1.0 " cRESET "2021-04-02\n");
 						exit(0);
 					}
 					
 					else if(opt == 'h'){
 						
-						printf(cGREEN "\n----------SAV To CSV Help----------\n");
+						printf(cGREEN "\n----------sav2csv Help----------\n");
 						
 						printf(cYELLOW "Usage:\n");
 						printf(cMAGENTA "\tcommand [options] [arguments]\n");
@@ -82,7 +83,7 @@ int main(int argc, char *argv[])
 		optind = 1;
 	
 	//ullo
-		(!silent) ? printf(cGREEN "\n----------SAV To CSV----------\n\n" cRESET) : 0 ;
+		(!silent) ? printf(cGREEN "\n----------sav2csv----------\n\n" cRESET) : 0 ;
 	
 	//if it's not -v or -h then is the num of args correct?
 		if(argc <= 2){

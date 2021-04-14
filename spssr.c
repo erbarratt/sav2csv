@@ -152,7 +152,7 @@
 		{
 			eSELF(spssr_t);
 			
-			(!self->silent) ? printf(cCYAN "Reading file header:\n" cRESET) : 0;
+			(!self->silent) ? printf(cCYAN "Reading file header...\n" cRESET) : 0;
 			
 			//reset file pointer location to start
 				fseek(self->savptr, 0, SEEK_SET);
@@ -225,7 +225,7 @@
 		{
 			eSELF(spssr_t);
 			
-			(!self->silent) ? printf(cCYAN "Reading meta data:\n" cRESET) : 0;
+			(!self->silent) ? printf(cCYAN "Reading meta data...\n" cRESET) : 0;
 
 			bool stop = false;
 			while (!stop) {

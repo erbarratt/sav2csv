@@ -234,7 +234,10 @@
 				void (*readMeta)(void* eOBJ);
 				void (*readVariable)(void* eOBJ);
 				void (*readValueLabels)(void* eOBJ);
-				
+				void (*dataToCsvLong)(void* eOBJ);
+				void (*dataToCsvFlat)(void* eOBJ);
+				bool (*dubIsInt)(flt64_t val);
+				void (*readUint8)(void* eOBJ, uint8_t * buffer);
 				void (*readInt8)(void* eOBJ, int8_t * buffer);
 				void (*readInt32)(void* eOBJ, int32_t * buffer);
 				void (*readFlt64)(void* eOBJ, flt64_t * buffer);
@@ -260,7 +263,10 @@
 		void spssr_t_readMeta(void* eOBJ);
 		void spssr_t_readVariable(void* eOBJ);
 		void spssr_t_readValueLabels(void* eOBJ);
-		
+		void spssr_t_dataToCsvLong(void* eOBJ);
+		void spssr_t_dataToCsvFlat(void* eOBJ);
+		bool spssr_t_dubIsInt(flt64_t val);
+		void spssr_t_readUint8(void* eOBJ, uint8_t* buffer);
 		void spssr_t_readInt8(void* eOBJ, int8_t* buffer);
 		void spssr_t_readInt32(void* eOBJ, int32_t* buffer);
 		void spssr_t_readFlt64(void* eOBJ, flt64_t* buffer);

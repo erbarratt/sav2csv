@@ -252,21 +252,26 @@
 			//
 			//			break;
 			//
-			//		// Read and parse additional records (7)
-			//			case RECORD_TYPE_ADDITIONAL:
-			//
-			//				{
-			//
-			//					int subtype = readInt32("SubType:");
-			//					//@4
-			//
-			//					int size = readInt32("Size:");
-			//					//@8
-			//
-			//					int count = readInt32("Count:");
-			//					//@12
-			//
-			//					int datalen = size * count;
+					// Read and parse additional records (7)
+						case RECORD_TYPE_ADDITIONAL:
+
+							{
+
+								int32_t subtype;
+								self->readInt32(self, &subtype);
+								
+								
+								
+								// = readInt32("SubType:");
+								//@4
+
+								//int size = readInt32("Size:");
+								//@8
+
+								//int count = readInt32("Count:");
+								//@12
+
+								//int datalen = size * count;
 			//
 			//					switch (subtype) {
 			//
@@ -395,10 +400,10 @@
 			//							break;
 			//					}
 			//
-			//				}
-			//
-			//			break;
-			//
+							}
+
+						break;
+
 					// Finish
 						case RECORD_TYPE_FINAL:
 
@@ -450,7 +455,7 @@
 				current->next = (struct Variable *) malloc(sizeof(struct Variable));
 			
 			self->readInt32(self, &current->next->type);
-			SND(cGREEN "((Var)) Type Code:" cMAGENTA " [%d] " cRESET, current->next->type);
+			SND(cYELLOW "((Variable)) " cGREEN "Type Code:" cMAGENTA " [%d] " cRESET, current->next->type);
 			
 			//if TYPECODE is -1, record is a continuation of a string var
 				if(current->next->type == -1) {
@@ -487,13 +492,13 @@
 
 					// read short varname of 8 chars
 						self->readText(self, current->next->name, 8);
-						SND(cGREEN "Var Short Name:" cMAGENTA " [%s] " cRESET, current->next->name);
+						SND(cGREEN "Var Short Name:" cRESET " [%s] " , current->next->name);
 
 					// read label length and label only if a label exists
 						if (current->next->has_var_label == 1) {
 
 							self->readInt32(self, &current->next->label_len);
-							SND(cGREEN "Label Length:" cMAGENTA " [%d] " cRESET, current->next->label_len);
+							SND(cGREEN "Label Length:" cRESET " [%d] ", current->next->label_len);
 
 							//need to ensure we read word-divisable amount of bytes
 								int rem = 4-(current->next->label_len % 4);
@@ -503,13 +508,13 @@
 								
 							current->next->label = (char*)malloc((size_t)((size_t)current->next->label_len+1));
 							self->readText(self, current->next->label, (size_t)current->next->label_len);
-							SND(cGREEN "Label:" cMAGENTA " [%s] " cRESET, current->next->label);
+							SND(cGREEN "Label:" cRESET " [%s] ", current->next->label);
 							
 							if(rem > 0){
 								char remtxt[rem+1];
 								self->readText(self, remtxt, (size_t)rem);
 							}
-							SND(cGREEN "Skip:" cMAGENTA " [%d] " cRESET, rem);
+							SND(cGREEN "Skip:" cRESET " [%d] ", rem);
 
 						}
 
@@ -544,7 +549,7 @@
 			
 			// number of labels
 				int32_t numberOfLabels; self->readInt32(self, &numberOfLabels);
-				SND(cGREEN "<<Var Labels>> Number of Labels:" cMAGENTA " [%d] " cRESET, numberOfLabels);
+				SND(cYELLOW "<<Var Labels>> " cGREEN "Number of Labels:" cMAGENTA " [%d] " cRESET, numberOfLabels);
 
 			// labels
 				int i;

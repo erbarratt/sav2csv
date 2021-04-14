@@ -12,5 +12,5 @@
 	#define  cMAGENTA "\x1b[35m"
 	#define  cCYAN "\x1b[36m"
 	#define  cRESET "\x1b[0m"
-	
+
 #endif //SAV2CSV_COMMON_H

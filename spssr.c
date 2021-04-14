@@ -117,8 +117,7 @@
 				if(self->longCsv){
 					eCALLna(self, dataToCsvLong);
 				} else {
-				
-				
+					eCALLna(self, dataToCsvFlat);
 				}
 			
 		}
@@ -924,9 +923,9 @@
 				int progressCount = 0;
 
 				if(totalRows < self->lineLimit){
-					progressDivision = totalRows / 20;
+					progressDivision = (int)ceil((flt64_t)totalRows / 20);
 				} else {
-					progressDivision = self->lineLimit / 20;
+					progressDivision = (int)ceil((flt64_t)self->lineLimit / 20);
 				}
 
 			//work out files and file pointers
@@ -962,15 +961,15 @@
 
 			flt64_t numData;
 			
-			struct Variable * current = self->variables_list_head;
-			current = current->next;
-
-			for(int j = 0; j < self->variable_count; j++){
-				printf("\n%d var %s type %d", j, current->name, current->type);
-				current = current->next;
-			}
+			//struct Variable * current = self->variables_list_head;
+			//current = current->next;
+			//
+			//for(int j = 0; j < self->variable_count; j++){
+			//	printf("\n%d var %s type %d", j, current->name, current->type);
+			//	current = current->next;
+			//}
 			
-			printf("\nVarianles count %d\n", self->variable_count);
+			//printf("\nVarianles count %d\n", self->variable_count);
 
 			int i;
 			for(i = 1; i <= self->header.ncases; i++){
@@ -983,7 +982,7 @@
 				for(j = 0; j < self->variable_count; j++){
 				
 					current = current->next;
-					printf("\n%d var %s type %d", j, current->name, current->type);
+					//printf("\n%d var %s type %d", j, current->name, current->type);
 
 					if(current->type != 0){
 
@@ -992,7 +991,7 @@
 
 						int blocksToRead = (int)floor((((flt64_t)charactersToRead - 1) / 8) + 1);
 						
-						printf("\nBlocks %d\n", blocksToRead);
+						//printf("\nBlocks %d\n", blocksToRead);
 
 						while (blocksToRead > 0) {
 
@@ -1001,7 +1000,7 @@
 								clusterIndex++;
 								if(clusterIndex > 7){
 
-									(!self->silent) ? printf("\n\t") : 0;
+									(!self->silent && self->debug) ? printf("\n\t") : 0;
 									self->readUint8(self, &cluster[0]);
 									SND(cBLUE " C1:" cMAGENTA " [%d] " cRESET, cluster[0]);
 									self->readUint8(self, &cluster[1]);
@@ -1023,7 +1022,7 @@
 
 								}
 								
-								printf("\n-%d %d-\n", clusterIndex, cluster[clusterIndex]);
+								//printf("\n-%d %d-\n", clusterIndex, cluster[clusterIndex]);
 
 								switch (cluster[clusterIndex]) {
 
@@ -1117,9 +1116,10 @@
 						if(self->header.compression > 0){
 
 							clusterIndex++;
+							
 							if(clusterIndex > 7){
 
-								(!self->silent) ? printf("\n\t") : 0;
+								(!self->silent && self->debug) ? printf("\n\t") : 0;
 								self->readUint8(self, &cluster[0]);
 								SND(cBLUE " C1:" cMAGENTA " [%d] " cRESET, cluster[0]);
 								self->readUint8(self, &cluster[1]);
@@ -1141,8 +1141,8 @@
 
 							}
 							
-							printf("\n-%d, %d-\n", clusterIndex, cluster[clusterIndex]);
-
+							//printf("\n-%d, %d-\n", clusterIndex, cluster[clusterIndex]);
+							
 							switch (cluster[clusterIndex]) {
 
 								// skip this code
@@ -1253,10 +1253,7 @@
 							progressCount++;
 
 						}
-
-						if(current->next != NULL){
-							current = current->next;
-						}
+						
 						variableId++;
 						rowCount++;
 
@@ -1278,8 +1275,7 @@
 				}
 
 			if(!self->silent){
-				printf(cGREEN "\nWrote %d rows.", totalRows);
-				printf("Wrote %d files." cRESET, filesAmount);
+				printf(cGREEN "\n\nWrote %d rows. Wrote %d files.\n\n" cRESET, totalRows, filesAmount);
 			}
 
 			//close current file
@@ -1299,16 +1295,16 @@
 			
 			//cluster for compression reads
 				uint8_t cluster[8] = {0,0,0,0,0,0,0,0};
-				int clusterIndex = 8;
+				int clusterIndex = 7;
 			
 			//progress tracking
 				int progressDivision;
 				int progressCount = 0;
 				
 				if(self->header.ncases < self->lineLimit){
-					progressDivision = self->header.ncases / 20;
+					progressDivision = (int)ceil((flt64_t)self->header.ncases / 20);
 				} else {
-					progressDivision = self->lineLimit / 20;
+					progressDivision = (int)ceil((flt64_t)self->lineLimit / 20);
 				}
 			
 			//work out files and file pointers
@@ -1343,285 +1339,291 @@
 			(!self->silent) ? printf(cCYAN "Building Flat CSV:\n") : 0;
 			(!self->silent) ? printf("\t%s\n" cRESET, filename) : 0;
 			
-			double numData;
+			flt64_t numData;
 			
 			int i;
 			for(i = 1; i <= self->header.ncases; i++){
 				
 				//loop through vars, skipping head of list
-					struct Variable * current = self->variables_list_head;
+				struct Variable * current = self->variables_list_head;
+				
+				if(self->includeRowIndex){
+					fprintf(csvs[fileNumber-1],"%d,", i);
+				}
+				
+				int j;
+				int k = 0;
+				for(j = 0; j < self->variable_count; j++, k++){
+					
 					current = current->next;
 					
-					if(self->includeRowIndex){
-						fprintf(csvs[fileNumber-1],"%d,", i);
-					}
+					if(current->type != 0){
 					
-					int j;
-					for(j = 0; j < self->variable_count; j++){
+						//Same as "Width" column invariables tab in SPSS
+						int charactersToRead = (current->write >> 8) & 0xFF; //byte 2
 						
-						//current->type
+						int blocksToRead = (int)floor((((flt64_t)charactersToRead - 1) / 8) + 1);
 						
-						if(current->type != 0){
+						while (blocksToRead > 0) {
+							
+							if (self->header.compression > 0) {
+							
+								clusterIndex++;
+								if(clusterIndex > 7){
 						
-							int charactersToRead = (current->write >> 8) & 0xFF; //byte 2
-							
-							double blocksToRead = floorf( (((float)charactersToRead - 1) / 8) + 1 );
-							
-							while (blocksToRead > 0) {
-								
-								if (self->header.compression > 0) {
-								
-									if(clusterIndex > 7){
-							
-										(!self->silent) ? printf("\n\t") : 0;
-										self->readUint8(self, &cluster[0]);
-										SND(cBLUE " C1:" cMAGENTA " [%d] " cRESET, cluster[0]);
-										self->readUint8(self, &cluster[1]);
-										SND(cBLUE " C2:" cMAGENTA " [%d] " cRESET, cluster[1]);
-										self->readUint8(self, &cluster[2]);
-										SND(cBLUE " C3:" cMAGENTA " [%d] " cRESET, cluster[2]);
-										self->readUint8(self, &cluster[3]);
-										SND(cBLUE " C4:" cMAGENTA " [%d] " cRESET, cluster[3]);
-										self->readUint8(self, &cluster[4]);
-										SND(cBLUE " C5:" cMAGENTA " [%d] " cRESET, cluster[4]);
-										self->readUint8(self, &cluster[5]);
-										SND(cBLUE " C6:" cMAGENTA " [%d] " cRESET, cluster[5]);
-										self->readUint8(self, &cluster[6]);
-										SND(cBLUE " C7:" cMAGENTA " [%d] " cRESET, cluster[6]);
-										self->readUint8(self, &cluster[7]);
-										SND(cBLUE " C8:" cMAGENTA " [%d] \n" cRESET, cluster[7]);
-										
-										clusterIndex = 0;
+									(!self->silent && self->debug) ? printf("\n\t") : 0;
+									self->readUint8(self, &cluster[0]);
+									SND(cBLUE " C1:" cMAGENTA " [%d] " cRESET, cluster[0]);
+									self->readUint8(self, &cluster[1]);
+									SND(cBLUE " C2:" cMAGENTA " [%d] " cRESET, cluster[1]);
+									self->readUint8(self, &cluster[2]);
+									SND(cBLUE " C3:" cMAGENTA " [%d] " cRESET, cluster[2]);
+									self->readUint8(self, &cluster[3]);
+									SND(cBLUE " C4:" cMAGENTA " [%d] " cRESET, cluster[3]);
+									self->readUint8(self, &cluster[4]);
+									SND(cBLUE " C5:" cMAGENTA " [%d] " cRESET, cluster[4]);
+									self->readUint8(self, &cluster[5]);
+									SND(cBLUE " C6:" cMAGENTA " [%d] " cRESET, cluster[5]);
+									self->readUint8(self, &cluster[6]);
+									SND(cBLUE " C7:" cMAGENTA " [%d] " cRESET, cluster[6]);
+									self->readUint8(self, &cluster[7]);
+									SND(cBLUE " C8:" cMAGENTA " [%d] \n" cRESET, cluster[7]);
 									
-									}
+									clusterIndex = 0;
+								
+								}
+								
+								switch (cluster[clusterIndex]) {
 									
-									switch (cluster[clusterIndex]) {
+									// skip this code
+										case COMPRESS_SKIP_CODE:
+									// all blanks
+										case COMPRESS_ALL_BLANKS:
+											charactersToRead -= 8;
+										break;
+									
+									// end of file, no more data to follow. This should not happen.
+										case COMPRESS_END_OF_FILE:
+											fprintf(stderr, cRED "Error reading data: unexpected end of compressed data file (cluster code 252)\n" cRESET);
+											exit(EXIT_FAILURE);
 										
-										// skip this code
-											case COMPRESS_SKIP_CODE:
-										// all blanks
-											case COMPRESS_ALL_BLANKS:
-											break;
+									// data cannot be compressed, the value follows the cluster
+										case COMPRESS_NOT_COMPRESSED:
 										
-										// end of file, no more data to follow. This should not happen.
-											case COMPRESS_END_OF_FILE:
-												fprintf(stderr, cRED "Error reading data: unexpected end of compressed data file (cluster code 252)\n" cRESET);
-												exit(EXIT_FAILURE);
-											
-										// data cannot be compressed, the value follows the cluster
-											case COMPRESS_NOT_COMPRESSED:
-											
-												{
-													
-													// read a maximum of 8 characters but could be less if this is the last block
-														size_t blockStringLength = (size_t)MIN(8, (float)charactersToRead);
-
-													// append to existing value
-														char txt[9];
-														self->readText(self, txt, (size_t)blockStringLength);
-														SND(cBLUE "%s" cRESET, txt);
-
-													// if this is the last block, skip the remaining dummy byte(s) (in the block of 8 bytes)
-														if (charactersToRead < 8) {
-															char dummy[9];
-															self->readText(self, dummy, (size_t)(8 - charactersToRead));
-															SND(cBLUE "%s" cRESET, dummy);
-														}
-													// update the characters counter
-														charactersToRead -= (int)blockStringLength;
-													
-												}
+											{
 												
-											break;
-										
-										// system missing value
-											case COMPRESS_MISSING_VALUE:
-												fprintf(stderr, cRED "Error reading data: unexpected SYSMISS for string variable\n" cRESET);
-												exit(EXIT_FAILURE);
-										
-										// 1-251 value is code minus the compression BIAS (normally always equal to 100)
-											default:
-												fprintf(stderr, cRED "Error reading data: unexpected compression code for string variable\n" cRESET);
-												exit(EXIT_FAILURE);
-									}
-								
-								//UNCOMPRESSED DATA
-									} else {
-									
-										// read a maximum of 8 characters but could be less if this is the last block
-											size_t blockStringLength = (size_t)MIN(8, (float)charactersToRead);
+												// read a maximum of 8 characters but could be less if this is the last block
+													size_t blockStringLength = (size_t)MIN(8, (float)charactersToRead);
 	
-										// append to existing value
-											char txt[9];
-											self->readText(self, txt, (size_t)blockStringLength);
-											SND(cBLUE "%s" cRESET, txt);
+												// append to existing value
+													char txt[9];
+													self->readText(self, txt, (size_t)blockStringLength);
+													SND(cBLUE "%s" cRESET, txt);
 	
-										// if this is the last block, skip the remaining dummy byte(s) (in the block of 8 bytes)
-											if (charactersToRead < 8) {
-												char dummy[9];
-												self->readText(self, dummy, (size_t)(8 - charactersToRead));
-												SND(cBLUE "%s" cRESET, dummy);
+												// if this is the last block, skip the remaining dummy byte(s) (in the block of 8 bytes)
+													if (charactersToRead < 8) {
+														char dummy[9];
+														self->readText(self, dummy, (size_t)(8 - charactersToRead));
+														SND(cBLUE "%s" cRESET, dummy);
+													}
+												// update the characters counter
+													charactersToRead -= (int)blockStringLength;
+												
 											}
-										// update the characters counter
-											charactersToRead -= (int)blockStringLength;
 											
-									}
+										break;
+									
+									// system missing value
+										case COMPRESS_MISSING_VALUE:
+											fprintf(stderr, cRED "Error reading data: unexpected SYSMISS for string variable\n" cRESET);
+											exit(EXIT_FAILURE);
+									
+									// 1-251 value is code minus the compression BIAS (normally always equal to 100)
+										default:
+											fprintf(stderr, cRED "Error reading data: unexpected compression code for string variable\n" cRESET);
+											exit(EXIT_FAILURE);
+								}
+							
+							//UNCOMPRESSED DATA
+								} else {
 								
-								blocksToRead--;
+									// read a maximum of 8 characters but could be less if this is the last block
+										size_t blockStringLength = (size_t)MIN(8, (float)charactersToRead);
+	
+									// append to existing value
+										char txt[9];
+										self->readText(self, txt, (size_t)blockStringLength);
+										SND(cBLUE "%s" cRESET, txt);
+	
+									// if this is the last block, skip the remaining dummy byte(s) (in the block of 8 bytes)
+										if (charactersToRead < 8) {
+											char dummy[9];
+											self->readText(self, dummy, (size_t)(8 - charactersToRead));
+											SND(cBLUE "%s" cRESET, dummy);
+										}
+									// update the characters counter
+										charactersToRead -= (int)blockStringLength;
+										
+								}
 							
+							blocksToRead--;
+							
+							if(current->next != NULL && blocksToRead > 0){
+								current = current->next;
+								j++;
 							}
-							
-							current = current->next;
-							continue;
 						
 						}
 						
-						numData = 0;
-						bool insertNull = false;
+						continue;
+					
+					}
+					
+					numData = 0;
+					bool insertNull = false;
+					
+					if(self->header.compression > 0){
+					
+						clusterIndex++;
+						if(clusterIndex > 7){
 						
-						if(self->header.compression > 0){
+							(!self->silent && self->debug) ? printf("\n\t") : 0;
+							self->readUint8(self, &cluster[0]);
+							SND(cBLUE " C1:" cMAGENTA " [%d] " cRESET, cluster[0]);
+							self->readUint8(self, &cluster[1]);
+							SND(cBLUE " C2:" cMAGENTA " [%d] " cRESET, cluster[1]);
+							self->readUint8(self, &cluster[2]);
+							SND(cBLUE " C3:" cMAGENTA " [%d] " cRESET, cluster[2]);
+							self->readUint8(self, &cluster[3]);
+							SND(cBLUE " C4:" cMAGENTA " [%d] " cRESET, cluster[3]);
+							self->readUint8(self, &cluster[4]);
+							SND(cBLUE " C5:" cMAGENTA " [%d] " cRESET, cluster[4]);
+							self->readUint8(self, &cluster[5]);
+							SND(cBLUE " C6:" cMAGENTA " [%d] " cRESET, cluster[5]);
+							self->readUint8(self, &cluster[6]);
+							SND(cBLUE " C7:" cMAGENTA " [%d] " cRESET, cluster[6]);
+							self->readUint8(self, &cluster[7]);
+							SND(cBLUE " C8:" cMAGENTA " [%d] \n" cRESET, cluster[7]);
+							
+							clusterIndex = 0;
 						
-							if(clusterIndex > 7){
+						}
+						
+						//printf("\n-%d, %d-\n", clusterIndex, cluster[clusterIndex]);
+						
+						switch (cluster[clusterIndex]) {
 							
-								(!self->silent) ? printf("\n\t") : 0;
-								self->readUint8(self, &cluster[0]);
-								SND(cBLUE " C1:" cMAGENTA " [%d] " cRESET, cluster[0]);
-								self->readUint8(self, &cluster[1]);
-								SND(cBLUE " C2:" cMAGENTA " [%d] " cRESET, cluster[1]);
-								self->readUint8(self, &cluster[2]);
-								SND(cBLUE " C3:" cMAGENTA " [%d] " cRESET, cluster[2]);
-								self->readUint8(self, &cluster[3]);
-								SND(cBLUE " C4:" cMAGENTA " [%d] " cRESET, cluster[3]);
-								self->readUint8(self, &cluster[4]);
-								SND(cBLUE " C5:" cMAGENTA " [%d] " cRESET, cluster[4]);
-								self->readUint8(self, &cluster[5]);
-								SND(cBLUE " C6:" cMAGENTA " [%d] " cRESET, cluster[5]);
-								self->readUint8(self, &cluster[6]);
-								SND(cBLUE " C7:" cMAGENTA " [%d] " cRESET, cluster[6]);
-								self->readUint8(self, &cluster[7]);
-								SND(cBLUE " C8:" cMAGENTA " [%d] \n" cRESET, cluster[7]);
+							// skip this code
+								case COMPRESS_SKIP_CODE:
+								break;
 								
-								clusterIndex = 0;
+							// end of file, no more data to follow. This should not happen.
+								case COMPRESS_END_OF_FILE:
+									fprintf(stderr, cRED "Error reading data: unexpected end of compressed data file (cluster code 252)\n" cRESET);
+									exit(EXIT_FAILURE);
+								
+							// data cannot be compressed, the value follows the cluster
+								case COMPRESS_NOT_COMPRESSED:
+									self->readFlt64(self, &numData);
+								break;
+								
+							// all blanks
+								case COMPRESS_ALL_BLANKS:
+									numData = 0;
+								break;
+								
+							// system missing value
+								case COMPRESS_MISSING_VALUE:
+									//used to be 'NULL' but LOAD DATA INFILE requires \N instead, otherwise a '0' get's inserted instead
+									insertNull = true;
+								break;
+								
+							// 1-251 value is code minus the compression BIAS (normally always equal to 100)
+								default:
+									numData = cluster[clusterIndex] - self->header.compression_bias;
+								break;
 							
-							}
-								
-								clusterIndex++;
+						}
+					
+					} else {
+						self->readFlt64(self, &numData);
+					}
+					
+					//write to file
+					
+						if(insertNull){
 							
-							switch (cluster[clusterIndex]) {
-								
-								// skip this code
-									case COMPRESS_SKIP_CODE:
-									break;
-									
-								// end of file, no more data to follow. This should not happen.
-									case COMPRESS_END_OF_FILE:
-										fprintf(stderr, cRED "Error reading data: unexpected end of compressed data file (cluster code 252)\n" cRESET);
-										exit(EXIT_FAILURE);
-									
-								// data cannot be compressed, the value follows the cluster
-									case COMPRESS_NOT_COMPRESSED:
-										self->readFlt64(self, &numData);
-									break;
-									
-								// all blanks
-									case COMPRESS_ALL_BLANKS:
-										numData = 0;
-									break;
-									
-								// system missing value
-									case COMPRESS_MISSING_VALUE:
-										//used to be 'NULL' but LOAD DATA INFILE requires \N instead, otherwise a '0' get's inserted instead
-										insertNull = true;
-									break;
-									
-								// 1-251 value is code minus the compression BIAS (normally always equal to 100)
-									default:
-										numData = cluster[clusterIndex] - self->header.compression_bias;
-									break;
-								
-							}
+							fprintf(csvs[fileNumber-1],"\\N");
+						
+						} else if (self->dubIsInt(numData)) {
+							
+							fprintf(csvs[fileNumber-1],"%d",(int)numData);
 						
 						} else {
-							self->readFlt64(self, &numData);
+							
+							fprintf(csvs[fileNumber-1],"%f",numData);
+						
 						}
 						
-						//write to file
+						if(j < self->variable_count-1){
+							fprintf(csvs[fileNumber-1],",");
+						}
+				
+				}
+				
+				//newline
+					fprintf(csvs[fileNumber-1],"\n");
+				
+				//switch to new file
+					if(i % self->lineLimit == 0){
 						
-							if(j > 0){
-								fprintf(csvs[fileNumber-1],",");
-							}
-						
-							if(insertNull){
-								
-								fprintf(csvs[fileNumber-1],"\\N");
+						//close current file
+							fclose(csvs[fileNumber-1]);
 							
-							} else if (self->dubIsInt(numData)) {
-								
-								fprintf(csvs[fileNumber-1],"%d",(int)numData);
-							
-							} else {
-								
-								fprintf(csvs[fileNumber-1],"%f",numData);
-							
-							}
-							
-						current = current->next;
-					
-					}
-					
-					//newline
-						fprintf(csvs[fileNumber-1],"\n");
-					
-					//switch to new file
-						if(i % self->lineLimit == 0){
-							
-							//close current file
-								fclose(csvs[fileNumber-1]);
-								
-							//finish progressCount output
-								if(progressCount < 20 && !self->silent){
-									int x;
-									for(x = 0; x <= (20 - progressCount); x++){
-										printf("#");
-									}
-									fflush(stdout);
+						//finish progressCount output
+							if(progressCount < 20 && !self->silent){
+								int x;
+								for(x = 0; x <= (20 - progressCount); x++){
+									printf("#");
 								}
-								
-								progressCount = 0;
-							
-							//make and open new file
-								fileNumber++;
-								
-								char filenameHere[100] = "";
-								strcat(filenameHere, self->outputPrefix);
-								char filenameNumHere[100];
-								int lengthHere = snprintf( NULL, 0, "%d", fileNumber );
-								snprintf( filenameNumHere, (size_t)lengthHere+1, "%d", fileNumber );
-								strcat(filenameHere, filenameNumHere);
-								strcat(filenameHere, ".csv");
-							
-								csvs[fileNumber-1] = fopen(filenameHere,"w");
-								
-								if (csvs[fileNumber-1] == NULL) {
-									fprintf(stderr, cRED "Unable to open file (permission denied, try sudo): %s\n" cRESET, filenameHere);
-									exit(EXIT_FAILURE);
-								}
-							
-							if(!self->silent){
-								printf(cCYAN "\nBuilding Flat CSV:");
-								printf(cCYAN "\t%s" cRESET, filenameHere);
-							}
-							
-						} else if (i % progressDivision == 0){
-						
-							if(!self->silent){
-								printf("#");
 								fflush(stdout);
 							}
 							
-							progressCount++;
+							progressCount = 0;
 						
+						//make and open new file
+							fileNumber++;
+							
+							char filenameHere[100] = "";
+							strcat(filenameHere, self->outputPrefix);
+							char filenameNumHere[100];
+							int lengthHere = snprintf( NULL, 0, "%d", fileNumber );
+							snprintf( filenameNumHere, (size_t)lengthHere+1, "%d", fileNumber );
+							strcat(filenameHere, filenameNumHere);
+							strcat(filenameHere, ".csv");
+						
+							csvs[fileNumber-1] = fopen(filenameHere,"w");
+							
+							if (csvs[fileNumber-1] == NULL) {
+								fprintf(stderr, cRED "Unable to open file (permission denied, try sudo): %s\n" cRESET, filenameHere);
+								exit(EXIT_FAILURE);
+							}
+						
+						if(!self->silent){
+							printf(cCYAN "\nBuilding Flat CSV:");
+							printf(cCYAN "\t%s" cRESET, filenameHere);
 						}
+						
+					} else if (i % progressDivision == 0){
+					
+						if(!self->silent){
+							printf("#");
+							fflush(stdout);
+						}
+						
+						progressCount++;
+					
+					}
 			
 			}
 			
@@ -1635,8 +1637,7 @@
 				}
 			
 			if(!self->silent){
-				printf(cGREEN "\nWrote %d rows.", self->header.ncases);
-				printf("Wrote %d files." cRESET, filesAmount);
+				printf(cGREEN "\n\nWrote %d rows. Wrote %d files.\n\n" cRESET, self->header.ncases, filesAmount);
 			}
 			
 			//close current file

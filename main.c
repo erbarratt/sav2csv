@@ -1,4 +1,3 @@
-#include <string.h>
 #include <getopt.h>
 #include "eoopc.h"
 #include "spssr.h"

@@ -55,6 +55,12 @@ Use -o to define the prefix for any output csv's. The program will append x.csv,
 
 <pre># sudo ./sav2csv  -f filename.sav -o prefix</pre>
 
+h3>Output directory</h3>
+
+Use -w to define the directory for any output csv's. Defaults to "" (current directory).
+
+<pre># sudo ./sav2csv  -f filename.sav -w /path/to/your/directory/</pre>
+
 <h3>CSV Line limit</h3>
 
 Use -l to define how many rows should make up each output csv. Defaults to 1000000 (1 million). If output rows less, then only one file is generated. Program will check to see if this is a valid integer greater than 0.

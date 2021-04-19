@@ -205,6 +205,7 @@
 			
 			char* filename;
 			char* outputPrefix;
+			char* outputDirectory;
 			bool silent;
 			bool debug;
 			bool longCsv;
@@ -252,6 +253,7 @@
 			void* eOBJ,
 			char* filename,
 			char* outputPrefix,
+			char* outputDirectory,
 			bool silent,
 			bool debug,
 			bool longCsv,

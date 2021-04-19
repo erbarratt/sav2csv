@@ -7,6 +7,7 @@ int main(int argc, char *argv[])
 
 	char* filename = "sav.sav";
 	char* outputPrefix = "out";
+	char* outputDirectory = "";
 	bool silent = false;
 	bool debug = false;
 	bool longCsv = true;
@@ -91,7 +92,7 @@ int main(int argc, char *argv[])
 		}
 	
 	//go through normal options
-		while ((opt = getopt(argc, argv, "-f:o:l:svdFR")) != -1) {
+		while ((opt = getopt(argc, argv, "-f:o:w:l:svdFR")) != -1) {
 			
 			switch (opt) {
 				
@@ -103,6 +104,11 @@ int main(int argc, char *argv[])
 				//get output filename
 					case 'o':
 						outputPrefix = optarg;
+					break;
+					
+				//get output directory
+					case 'w':
+						outputDirectory = optarg;
 					break;
 					
 				//silent switch for stdout
@@ -156,6 +162,7 @@ int main(int argc, char *argv[])
 		if(!silent){
 			printf(cYELLOW "Input file set: %s\n" cRESET, filename);
 			printf(cYELLOW "Output file prefix set: %s\n" cRESET, outputPrefix);
+			printf(cYELLOW "Output file directory set: %s\n" cRESET, outputDirectory);
 			printf(cYELLOW "CSV Line Length set to: %d\n" cRESET, lineLimit);
 			printf(cYELLOW "CSV file format default: %s\n" cRESET, ((longCsv) ? "Long" : "Flat"));
 			printf(cYELLOW "CSV include row index default: %s\n" cRESET, ((includeRowIndex) ? "Yes" : "No"));
@@ -166,6 +173,7 @@ int main(int argc, char *argv[])
 		eCONSTRUCT(spssr_t, spssr,
 			filename,
 			outputPrefix,
+			outputDirectory,
 			silent,
 			debug,
 			longCsv,

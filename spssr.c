@@ -36,6 +36,7 @@
 			void* eOBJ,
 			char* filename,
 			char* outputPrefix,
+			char* outputDirectory,
 			bool silent,
 			bool debug,
 			bool longCsv,
@@ -50,6 +51,9 @@
 				
 				self->outputPrefix = (char*) malloc (100);
 				strcpy(self->outputPrefix, outputPrefix);
+				
+				self->outputDirectory = (char*) malloc (100);
+				strcpy(self->outputDirectory, outputDirectory);
 				
 				self->silent = silent;
 				self->debug = debug;
@@ -939,7 +943,8 @@
 				FILE * csvs[filesAmount];
 
 			//first filename
-				char filename[100] = "";
+				char filename[201] = "";
+				strcat(filename, self->outputDirectory);
 				strcat(filename, self->outputPrefix);
 				char filenameNum[100];
 				int length = snprintf( NULL, 0, "%d", fileNumber );
@@ -1223,7 +1228,8 @@
 							//make and open new file
 								fileNumber++;
 
-								char filenameHere[100] = "";
+								char filenameHere[201] = "";
+								strcat(filenameHere, self->outputDirectory);
 								strcat(filenameHere, self->outputPrefix);
 								char filenameNumHere[100];
 								int lengthHere = snprintf( NULL, 0, "%d", fileNumber );
@@ -1319,7 +1325,8 @@
 				FILE * csvs[filesAmount];
 			
 			//first filename
-				char filename[100] = "";
+				char filename[201] = "";
+				strcat(filename, self->outputDirectory);
 				strcat(filename, self->outputPrefix);
 				char filenameNum[100];
 				int length = snprintf( NULL, 0, "%d", fileNumber );
@@ -1594,7 +1601,8 @@
 						//make and open new file
 							fileNumber++;
 							
-							char filenameHere[100] = "";
+							char filenameHere[201] = "";
+							strcat(filenameHere, self->outputDirectory);
 							strcat(filenameHere, self->outputPrefix);
 							char filenameNumHere[100];
 							int lengthHere = snprintf( NULL, 0, "%d", fileNumber );

@@ -1,4 +1,4 @@
-#include <string.h>
+
 #include <math.h>
 #include "spssr.h"
 #include "eoopc.h"

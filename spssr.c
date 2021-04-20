@@ -124,10 +124,10 @@
 				return;
 				
 			} eCATCH(eERR){
-				if(self->filename) free(self->filename);
-				if(self->outputPrefix) free(self->outputPrefix);
-				if(self->outputDirectory) free(self->outputDirectory);
-				if(self->savptr) fclose(self->savptr);
+				if(self->filename) { free(self->filename); }
+				if(self->outputPrefix) { free(self->outputPrefix); }
+				if(self->outputDirectory) { free(self->outputDirectory); }
+				if(self->savptr) { fclose(self->savptr); }
 				exit(EXIT_FAILURE);
 			}
 			
@@ -171,8 +171,9 @@
 			//layout code should be 2 or 3 @68
 				self->readInt32(self, &self->header.layout_code);
 
-				if(self->header.layout_code != 2 && self->header.layout_code != 3)
+				if(self->header.layout_code != 2 && self->header.layout_code != 3) {
 					self->big_endian = true;
+				}
 
 				SND(cYELLOW "Endianness: " cMAGENTA "%s\n" cRESET, ((self->big_endian) ? "Big" : "Little"));
 				

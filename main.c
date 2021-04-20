@@ -5,6 +5,9 @@
 int main(int argc, char *argv[])
 {
 
+	//make new reader object, and execute csv functions
+		struct spssr_t* spssr = eNEW(spssr_t);
+
 	eTRY{
 
 		char* filename = "sav.sav";
@@ -167,9 +170,6 @@ int main(int argc, char *argv[])
 				printf(cYELLOW "CSV include row index default: %s\n" cRESET, ((includeRowIndex) ? "Yes" : "No"));
 			}
 			
-		//make new reader object, and execute csv functions
-			struct spssr_t* spssr = eNEW(spssr_t);
-			
 			eCHECK(spssr == 0, eERR, "Failed to allocate memory for spssr struct in main()");
 			
 			eCONSTRUCT(spssr_t, spssr,
@@ -182,10 +182,15 @@ int main(int argc, char *argv[])
 				includeRowIndex,
 				lineLimit
 			);
+		
+		eDESTROY(spssr);
 	
 		return 0;
 	
 	} eCATCH(eERR){
+		if(spssr) {
+			eDESTROY(spssr);
+		}
 		exit(EXIT_FAILURE);
 	}
 

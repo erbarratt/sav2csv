@@ -55,7 +55,7 @@ Use -o to define the prefix for any output csv's. The program will append x.csv,
 
 <pre># sudo ./sav2csv  -f filename.sav -o prefix</pre>
 
-h3>Output directory</h3>
+<h3>Output directory</h3>
 
 Use -w to define the directory for any output csv's. Defaults to "" (current directory).
 

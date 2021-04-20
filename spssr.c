@@ -1,4 +1,3 @@
-
 #include <math.h>
 #include "spssr.h"
 #include "eoopc.h"
@@ -47,12 +46,15 @@
 			
 			//program settings
 				self->filename = (char*) malloc (100);
+				eTRY(self->filename, 1, "Failed to allocate memory for filename string.");
 				strcpy(self->filename, filename);
 				
 				self->outputPrefix = (char*) malloc (100);
+				eTRY(self->outputPrefix, 1, "Failed to allocate memory for output prefix string");
 				strcpy(self->outputPrefix, outputPrefix);
 				
 				self->outputDirectory = (char*) malloc (100);
+				eTRY(self->outputDirectory, 1, "Failed to allocate memory for output directory string");
 				strcpy(self->outputDirectory, outputDirectory);
 				
 				self->silent = silent;
@@ -83,21 +85,14 @@
 				self->readText = &spssr_t_readText;
 				
 			//try to open file
-				if(eCALLna(self, openFile) != 0){
-					fprintf(stderr, cRED "Unable to open file (permission denied, try sudo): %s\n\n" cRESET, self->filename);
-					exit(EXIT_FAILURE);
-				}
-				
+				eCALLna(self, openFile);
+				eTRY(self->savptr, 1, "Unable to open file (permission denied, try sudo): %s", self->filename);
 				(!self->silent) ? printf(cCYAN "Opened .sav file: %s\n" cRESET, filename): 0 ;
 			
 			//head element of Variables linked list
 				self->variables_list_head = NULL;
 				self->variables_list_head = (struct Variable*)malloc(sizeof(struct Variable));
-				
-				if (self->variables_list_head == NULL) {
-				    fprintf(stderr, cRED "Failed to allocate memory for variables.\n\n" cRESET);
-					exit(EXIT_FAILURE);
-				}
+				eTRY(self->variables_list_head, 1, "Failed to allocate memory for variables.");
 				
 				self->variables_list_head->alignment = 0;
 				self->variables_list_head->cols = 0;
@@ -123,28 +118,28 @@
 				} else {
 					eCALLna(self, dataToCsvFlat);
 				}
+				
+			return;
+		
+			eCATCH(1):
+				if(self->filename) free(self->filename);
+				if(self->outputPrefix) free(self->outputPrefix);
+				if(self->outputDirectory) free(self->outputDirectory);
+				if(self->savptr) fclose(self->savptr);
+				exit(EXIT_FAILURE);
 			
 		}
 	
 	/**
 	* Try to open the savfile
 	* @param eOBJ
-	* @return int (0 = true)
+	* @return void
 	*/
-		int spssr_t_openFile(void* eOBJ)
+		void spssr_t_openFile(void* eOBJ)
 		{
 			eSELF(spssr_t);
-			
-			//try to open for read in binary mode
-				self->savptr = NULL;
-				self->savptr = fopen(self->filename, "rb");
-				
-			//file open?
-				if (self->savptr == NULL)
-					return 1;
-				
-			return 0;
-			
+			self->savptr = NULL;
+			self->savptr = fopen(self->filename, "rb");
 		}
 
 	/**
@@ -163,14 +158,9 @@
 			
 			//Record type code @4
 				self->readText(self, self->header.rec_type, 4);
-				
 				SND(cYELLOW "Record type code: " cMAGENTA "%s\n" cRESET, self->header.rec_type);
-				
-				if (strcmp(self->header.rec_type, "$FL2") != 0){
-					fprintf(stderr, cRED "File must begin with chars $FL2 for a valid SPSS .sav file.\n\n" cRESET);
-					exit(EXIT_FAILURE);
-				}
-			
+				eTRY(strcmp(self->header.rec_type, "$FL2") != 0, 1, "File must begin with chars $FL2 for a valid SPSS .sav file.");
+
 			//read SPSS Version text @64
 				self->readText(self, self->header.prod_name, 60);
 				SND(cYELLOW "Endianness: " cMAGENTA "%s\n" cRESET, self->header.prod_name);
@@ -219,6 +209,11 @@
 				
 			(!self->silent) ? printf(cCYAN "Cases found: " cMAGENTA "%d\n" cRESET, self->header.ncases) : 0 ;
 			
+			return;
+			
+			eCATCH(1):
+				exit(EXIT_FAILURE);
+			
 		}
 		
 	/**
@@ -236,7 +231,6 @@
 
 				int32_t recordType; self->readInt32(self, &recordType);
 				SND(cYELLOW "Record Type:" cMAGENTA " [%d] \n\t" cRESET, recordType);
-				
 
 				switch (recordType) {
 
@@ -320,13 +314,15 @@
 											int32_t endianness;self->readInt32(self, &endianness);
 											SND(cYELLOW "Endianness:" cMAGENTA " [%d] " cRESET, endianness);
 											
-											//Character code. The following values have been actually observed in system files:
+											//Character code. The following values have been actually observed in
+											// system files:
 											//
 											//1 - EBCDIC.
 											//
 											//2 - 7-bit ASCII.
 											//
-											//1250 - The windows-1250 code page for Central European and Eastern European languages.
+											//1250 - The windows-1250 code page for Central European and Eastern
+											// European languages.
 											//
 											//1252 - The windows-1252 code page for Western European languages.
 											//
@@ -341,7 +337,8 @@
 											//4 - DEC Kanji.
 											//
 											//Other Windows code page numbers are known to be generally valid.
-											//Old versions of SPSS for Unix and Windows always wrote value 2 in this field, regardless of the encoding in use. Newer versions also write the character encoding as a string
+											//Old versions of SPSS for Unix and Windows always wrote value 2 in this
+											// field, regardless of the encoding in use. Newer versions also write the character encoding as a string
 											int32_t character_code; self->readInt32(self, &character_code);
 											SND(cYELLOW "Char Code:" cMAGENTA " [%d] \n" cRESET, character_code);
 											
@@ -381,7 +378,8 @@
 									// understood by SPSS before version 14, or to 19 for records that describe
 									// dichotomy sets that use the CATEGORYLABELS=COUNTEDVALUES feature added in
 									// version 14.
-									//Zero or more line feeds (byte 0x0a), followed by a series of multiple response sets, each of which consists of the following:
+									//Zero or more line feeds (byte 0x0a), followed by a series of multiple response
+									// sets, each of which consists of the following:
 									//
 									// - The set’s name (an identifier that begins with ‘$’), in mixed upper and lower
 									//      case.
@@ -457,18 +455,12 @@
 									// records. No element corresponds to variable records that continue long string
 									// variables.
 										case 11:
-
-											if (size != 4) {
-												fprintf(stderr, cRED "Error reading record type 7 subtype 11: bad "
-								                "data element length [%d]. Expecting 4.\n\n" cRESET, size);
-												exit(EXIT_FAILURE);
-											}
-
-											if ((count % 3) != 0) {
-												fprintf(stderr, cRED "Error reading record type 7 subtype 11: "
-								                "number of data elements [%d] is not a multiple of 3.\n\n" cRESET, count);
-												exit(EXIT_FAILURE);
-											}
+	
+											eTRY(size != 4, 1, "Error reading record type 7 subtype 11: bad "
+								                "data element length [%d]. Expecting 4.", size);
+								                
+								            eTRY((count % 3) != 0, 1, "Error reading record type 7 subtype 11: "
+								                "number of data elements [%d] is not a multiple of 3.", count);
 
 											//go through vars and set meta
 												struct Variable * current = self->variables_list_head;
@@ -702,21 +694,24 @@
 								SND(cYELLOW "Test for final rec type: " cMAGENTA "%d\n" cRESET, test);
 	
 								if (test != 0) {
-									fprintf(stderr, cRED "Error reading record type 999: Non-zero value found.\n\n" cRESET);
-									exit(EXIT_FAILURE);
+									eTRY(eFORCECATCH, 1, "Error reading record type 999: Non-zero value found.");
 								}
 
 						break;
 
 					default:
-						fprintf(stderr, cRED "Read error: invalid record type [%d]\n\n" cRESET, recordType);
-						exit(EXIT_FAILURE);
+						eTRY(eFORCECATCH, 1, "Read error: invalid record type [%d]", recordType);
 
 				}
 
 			}
 			
 			(!self->silent) ? printf(cCYAN "Variables found: " cMAGENTA "%d\n" cRESET, self->variable_count) : 0 ;
+			
+			return;
+			
+			eCATCH(1):
+				exit(EXIT_FAILURE);
 		
 		}
 		
@@ -762,11 +757,8 @@
 					// read missing value format code. Should be between -3 to 3
 						self->readInt32(self, &current->next->n_missing_values);
 						SND(cGREEN "Missing Value Code:" cMAGENTA " [%d] \n\t" cRESET, current->next->n_missing_values);
-
-						if (abs(current->next->n_missing_values) > 3) {
-							fprintf(stderr, cRED "Error reading variable Record: invalid missing value format code [%d]. Range is -3 to 3.\n" cRESET, current->next->n_missing_values);
-							exit(EXIT_FAILURE);
-						}
+						eTRY(abs(current->next->n_missing_values) > 3, 1, "Error reading variable Record: invalid "
+								"missing value format code [%d]. Range is -3 to 3.", current->next->n_missing_values);
 
 					// read print format code
 						self->readInt32(self, &current->next->print);
@@ -822,6 +814,11 @@
 				}
 				
 			(!self->silent && self->debug) ? printf(cRESET "\n\n") : 0 ;
+			
+			return;
+			
+			eCATCH(1):
+				exit(EXIT_FAILURE);
 			
 		}
 
@@ -880,10 +877,8 @@
 				int32_t recTypeCode; self->readInt32(self, &recTypeCode);
 				SND(cBLUE "Record Type Code:" cMAGENTA " [%d] " cRESET, recTypeCode);
 				
-				if (recTypeCode != 4) {
-					fprintf(stderr, cRED "Error reading Variable Index record: bad record type [%d]. Expecting Record Type 4.\n" cRESET, recTypeCode);
-					exit(EXIT_FAILURE);
-				}
+				eTRY(recTypeCode != RECORD_TYPE_VALUE_LABELS_INDEX, 1,
+					"Error reading Variable Index record: bad record type [%d]. Expecting Record Type 4.", recTypeCode);
 
 			// number of variables to add to?
 				int32_t numVars; self->readInt32(self, &numVars);
@@ -899,6 +894,11 @@
 				}
 				
 			(!self->silent && self->debug) ? printf(cRESET "\n\n") : 0 ;
+			
+			return;
+			
+			eCATCH(1):
+				exit(EXIT_FAILURE);
 		
 		}
 		
@@ -956,10 +956,8 @@
 				csvs[0] = fopen(filename, "w");
 
 			//can we open and edit?
-				if (csvs[0] == NULL) {
-					fprintf(stderr, cRED "Unable to open file (permission denied, try sudo): %s\n" cRESET, filename);
-					exit(EXIT_FAILURE);
-				}
+				eTRY(csvs[0] == NULL, 1,
+					"Unable to open file (permission denied, try sudo): %s", filename);
 
 			(!self->silent) ? printf(cCYAN "Building Long CSV:\n") : 0;
 			(!self->silent) ? printf("\t%s\n" cRESET, filename) : 0;
@@ -1040,8 +1038,9 @@
 
 									// 252 end of file, no more data to follow. This should not happen.
 										case COMPRESS_END_OF_FILE:
-											fprintf(stderr, cRED "Error reading data: unexpected end of compressed data file (cluster code 252)\n" cRESET);
-											exit(EXIT_FAILURE);
+											eTRY(eFORCECATCH, 1,
+												"Error reading data: unexpected end of compressed data file (cluster code 252)");
+										break;
 
 									// 253 data cannot be compressed, the value follows the cluster
 										case COMPRESS_NOT_COMPRESSED:
@@ -1071,13 +1070,14 @@
 
 									// 255 system missing value
 										case COMPRESS_MISSING_VALUE:
-											fprintf(stderr, cRED "Error reading data: unexpected SYSMISS for string variable\n" cRESET);
-											exit(EXIT_FAILURE);
+											eTRY(eFORCECATCH, 1, "Error reading data: unexpected SYSMISS for string variable");
+										break;
 
 									// 1-251 value is code minus the compression BIAS (normally always equal to 100)
 										default:
-											fprintf(stderr, cRED "Error reading data: unexpected compression code for string variable %d\n" cRESET, cluster[clusterIndex]);
-											exit(EXIT_FAILURE);
+											eTRY(eFORCECATCH, 1, "Error reading data: unexpected compression code for "
+												"string variable %d", cluster[clusterIndex]);
+										break;
 								}
 
 							//UNCOMPRESSED DATA
@@ -1156,8 +1156,9 @@
 
 								// end of file, no more data to follow. This should not happen.
 									case COMPRESS_END_OF_FILE:
-										fprintf(stderr, cRED "Error reading data: unexpected end of compressed data file (cluster code 252)\n" cRESET);
-										exit(EXIT_FAILURE);
+										eTRY(eFORCECATCH, 1, "Error reading data: unexpected end of compressed "
+							                    "data file (cluster code 252)");
+							        break;
 
 								// data cannot be compressed, the value follows the cluster
 									case COMPRESS_NOT_COMPRESSED:
@@ -1171,7 +1172,8 @@
 
 								// system missing value
 									case COMPRESS_MISSING_VALUE:
-										//used to be 'NULL' but LOAD DATA INFILE requires \N instead, otherwise a '0' get's inserted instead
+										//used to be 'NULL' but LOAD DATA INFILE requires \N instead, otherwise a '0'
+										// get's inserted instead
 										insertNull = true;
 									break;
 
@@ -1239,10 +1241,8 @@
 
 								csvs[fileNumber-1] = fopen(filenameHere,"w");
 
-								if (csvs[fileNumber-1] == NULL) {
-									fprintf(stderr, cRED "Unable to open file (permission denied, try sudo): %s\n" cRESET, filenameHere);
-									exit(EXIT_FAILURE);
-								}
+								eTRY(csvs[fileNumber-1] == NULL, 1,
+									"Unable to open file (permission denied, try sudo): %s", filenameHere);
 
 							if(!self->silent){
 								printf(cCYAN "\nBuilding Long CSV:");
@@ -1286,6 +1286,11 @@
 
 			//close current file
 				fclose(csvs[fileNumber-1]);
+				
+			return;
+			
+			eCATCH(1):
+				exit(EXIT_FAILURE);
 
 		}
 		
@@ -1411,8 +1416,9 @@
 									
 									// end of file, no more data to follow. This should not happen.
 										case COMPRESS_END_OF_FILE:
-											fprintf(stderr, cRED "Error reading data: unexpected end of compressed data file (cluster code 252)\n" cRESET);
-											exit(EXIT_FAILURE);
+											eTRY(eFORCECATCH, 1, "Error reading data: unexpected end of compressed "
+							                    "data file (cluster code 252)");
+							                break;
 										
 									// data cannot be compressed, the value follows the cluster
 										case COMPRESS_NOT_COMPRESSED:
@@ -1442,13 +1448,14 @@
 									
 									// system missing value
 										case COMPRESS_MISSING_VALUE:
-											fprintf(stderr, cRED "Error reading data: unexpected SYSMISS for string variable\n" cRESET);
-											exit(EXIT_FAILURE);
+											eTRY(eFORCECATCH, 1, "Error reading data: unexpected SYSMISS for string variable");
+										break;
 									
 									// 1-251 value is code minus the compression BIAS (normally always equal to 100)
 										default:
-											fprintf(stderr, cRED "Error reading data: unexpected compression code for string variable\n" cRESET);
-											exit(EXIT_FAILURE);
+											eTRY(eFORCECATCH, 1, "Error reading data: unexpected compression code for string variable");
+										break;
+
 								}
 							
 							//UNCOMPRESSED DATA
@@ -1526,8 +1533,9 @@
 								
 							// end of file, no more data to follow. This should not happen.
 								case COMPRESS_END_OF_FILE:
-									fprintf(stderr, cRED "Error reading data: unexpected end of compressed data file (cluster code 252)\n" cRESET);
-									exit(EXIT_FAILURE);
+									eTRY(eFORCECATCH, 1,
+									"Error reading data: unexpected end of compressed data file (cluster code 252)");
+								break;
 								
 							// data cannot be compressed, the value follows the cluster
 								case COMPRESS_NOT_COMPRESSED:
@@ -1612,10 +1620,8 @@
 						
 							csvs[fileNumber-1] = fopen(filenameHere,"w");
 							
-							if (csvs[fileNumber-1] == NULL) {
-								fprintf(stderr, cRED "Unable to open file (permission denied, try sudo): %s\n" cRESET, filenameHere);
-								exit(EXIT_FAILURE);
-							}
+							eTRY(csvs[fileNumber-1] == NULL, 1, "Unable to open file (permission denied, try sudo): %s",
+								filenameHere);
 						
 						if(!self->silent){
 							printf(cCYAN "\nBuilding Flat CSV:");
@@ -1650,6 +1656,11 @@
 			
 			//close current file
 				fclose(csvs[fileNumber-1]);
+				
+			return;
+			
+			eCATCH(1):
+				exit(EXIT_FAILURE);
 		
 		}
 		

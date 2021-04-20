@@ -2,6 +2,35 @@
 #define EOOPC_MAIN_H
 	
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+	
+	#define  cRED "\x1b[31m"
+	#define  cGREEN "\x1b[32m"
+	#define  cYELLOW "\x1b[33m"
+	#define  cBLUE "\x1b[34m"
+	#define  cMAGENTA "\x1b[35m"
+	#define  cCYAN "\x1b[36m"
+	#define  cRESET "\x1b[0m"
+	
+	#ifdef NDEBUG
+		#define eDEBUG(M, ...)
+	#else
+		#define eDEBUG(M, ...) fprintf(stderr, "DEBUG %s:%d: " M "\n", __FILE__, __LINE__, ##__VA_ARGS__)
+	#endif
+		
+		//#define sentinel(M, ...) { log_err(M, ##__VA_ARGS__);errno=0; goto error; }
+		// check_mem(A) check((A), "Out of memory.")
+		//#define check_debug(A, M, ...) if(!(A)) { debug(M, ##__‐VA_ARGS__); errno=0; goto error; }
+
+		#define eCLEANERRNO() (errno == 0 ? "None" : strerror(errno))
+		#define eLOGERROR(M, ...) fprintf(stderr, cRED "[ERROR] (%s:%d: errno: %s) " M "\n" cRESET, __FILE__, __LINE__, eCLEANERRNO(), ##__VA_ARGS__)
+		#define eLOGWARN(M, ...) fprintf(stderr, "[WARN] (%s:%d: errno: %s) " M "\n", __FILE__, __LINE__, eCLEANERRNO(), ##__VA_ARGS__)
+		#define eLOGINFO(M, ...) fprintf(stderr, "[INFO] (%s:%d) " M "\n", __FILE__, __LINE__, ##__VA_ARGS__)
+
+		#define eFORCECATCH 1 != 1
+		#define eTRY(test,err,msg, ...) if(!(test)) { eLOGERROR(msg, ##__VA_ARGS__); errno=0; goto error_##err; } else errno=0
+		#define eCATCH(n) error_##n
 
 	/**
 	* grab an interface definition by calling it's macro.

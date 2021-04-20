@@ -230,7 +230,7 @@
 				int variable_count;
 				
 			//methods
-				int (*openFile)(void* eOBJ);
+				void (*openFile)(void* eOBJ);
 				void (*readHeader)(void* eOBJ);
 				void (*readMeta)(void* eOBJ);
 				void (*readVariable)(void* eOBJ);
@@ -260,7 +260,7 @@
 			bool includeRowIndex,
 			int lineLimit
 		);
-		int spssr_t_openFile(void* eOBJ);
+		void spssr_t_openFile(void* eOBJ);
 		void spssr_t_readHeader(void* eOBJ);
 		void spssr_t_readMeta(void* eOBJ);
 		void spssr_t_readVariable(void* eOBJ);

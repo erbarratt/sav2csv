@@ -37,18 +37,24 @@ int main(int argc, char *argv[])
 						printf(cMAGENTA "\tcommand [options] [arguments]\n");
 						
 						printf(cYELLOW "Options:\n");
-						printf(cGREEN "\t-f\t\t" cRESET "Set the input .sav filename (eg file.sav). Filename limited to 99 chars\n");
 						
-						printf(cGREEN "\t-o\t\t" cRESET "Set the output csv prefix (appended by x.csv where x is filenumber determined by Line Limit)."
-									  " Filename limited to 99 chars");
+						printf(cGREEN "\t-f\t\t" cRESET "Set the input .sav filename (eg file.sav). Filename limited "
+									  "to 99 chars\n");
+						
+						printf(cGREEN "\t-o\t\t" cRESET "Set the output csv prefix (appended by x.csv where x is "
+									  "filenumber determined by Line Limit). Filename limited to 99 chars");
 						printf(cYELLOW "[default: out]\n");
+						
+						printf(cGREEN "\t-w\t\t" cRESET "Set the output directory. Directory limited to 99 chars ");
+						printf(cYELLOW "[default: "" (current directory)]\n");
 						
 						printf(cGREEN "\t-l\t\t" cRESET "Set Line Limit per csv file.");
 						printf(cYELLOW "[default: 1000000]\n");
 						
 						printf(cGREEN "\t-s\t\t" cRESET "Set silent mode for no output.\n");
 						
-						printf(cGREEN "\t-d\t\t" cRESET "Set debug mode for additional output. Will not output if Silent mode on.\n");
+						printf(cGREEN "\t-d\t\t" cRESET "Set debug mode for additional output. Will not output if "
+									  "Silent mode on.\n");
 						
 						printf(cGREEN "\t-F\t\t" cRESET "Set csv output format to flat instead of long.\n");
 						
@@ -87,7 +93,8 @@ int main(int argc, char *argv[])
 	
 	//if it's not -v or -h then is the num of args correct?
 		if(argc <= 2){
-			fprintf(stderr, cRED "Missing required options.\nUsage: savtocsv [-v] | [-f] [file...] [-o] [file...] [-l] [int] [-sdFR]\n\n" cRESET);
+			fprintf(stderr, cRED "Missing required options.\nUsage: savtocsv [-v] | [-f] [file...] [-o] "
+						"[file...] [-l] [int] [-sdFR]\n\n" cRESET);
 			exit(EXIT_FAILURE);
 		}
 	
@@ -170,6 +177,7 @@ int main(int argc, char *argv[])
 		
 	//make new reader object, and execute csv functions
 		struct spssr_t* spssr = eNEW(spssr_t);
+		eTRY(spssr, 1, "Failed to allocate memory for spssr struct in main()");
 		eCONSTRUCT(spssr_t, spssr,
 			filename,
 			outputPrefix,
@@ -182,4 +190,8 @@ int main(int argc, char *argv[])
 		);
 
 	return 0;
+	
+	eCATCH(1):
+		exit(EXIT_FAILURE);
+	
 }

@@ -21,6 +21,8 @@
 	* Learn C the Hard Way: Practical Exercises on the Computational Subjects You Keep Avoiding (Like C)
 	* Book by Zed Shaw (Zed's Aesome Debug Macros)
 	*/
+
+		#define eERR 1
 	
 		/**
 		* Set up some debugging functions that can be globally turned off with a definition
@@ -52,27 +54,32 @@
 		* Log some info
 		*/
 			#define eLOGINFO(msg, ...) fprintf(stderr, cRESET "[INFO] (%s:%d) " msg "\n", __FILE__, __LINE__, ##__VA_ARGS__)
-	
-		/**
-		* When we want to force a catch to goto
-		*/
-			#define eFORCECATCH 1 != 1
 		
 		/**
 		* Try a test, outputting an error if false, then goto a given error_X marker
 		*/
-			#define eTRY(test,err,msg, ...) if(!(test)) { eLOGERROR(msg, ##__VA_ARGS__); errno=0; goto error_##err; } else errno=0
+			#define eCHECK(test,err,msg, ...) if(test) { eLOGERROR(msg, ##__VA_ARGS__); errno=0; goto error_##err; } else errno=0
+	
+		/**
+		* Mark a chunk of code that will throw an error. Usage eTRY{ ... }. "return" should be within try block
+		*/
+			#define eTRY if(1)
+		
+		/**
+		* Throw an error to be "caught" by the appropriate catch marker
+		*/
+			#define eTHROW(exc,msg, ...) eLOGERROR(msg, ##__VA_ARGS__); goto error_##exc
+	
+		/**
+		* wrap definition of error_x marker
+		*/
+			#define eCATCH(n) error_##n: if(1)
 	
 	/**
 	* OOP Macros. Read up on OOP here:
 	* https://github.com/erbarratt/eoopc
 	* Extreme C: Taking you to the limit in Concurrency, OOP, and the most advanced capabilities of C - Kamran Amini
 	*/
-	
-		/**
-		* wrap definition of error_x marker
-		*/
-			#define eCATCH(n) error_##n
 	
 		/**
 		* grab an interface definition by calling it's macro.

@@ -235,4 +235,4 @@
 		*/
 			#define eDESTROY(o) free(o); o = ((void*)0)
 		
-#endif //OOP_MAIN_H
+#endif //EOOPC_MAIN_H
